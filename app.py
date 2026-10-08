@@ -291,6 +291,13 @@ def products():
         query = query.filter_by(result=result_filter)
     if station:
         query = query.filter_by(current_station=station)
+    if date_filter:
+        try:
+            datetime.strptime(date_filter, '%Y-%m-%d')
+        except ValueError:
+            flash('Please choose a valid creation date.', 'warning')
+            return redirect(url_for('products'))
+        query = query.filter(func.date(Product.created_at) == date_filter)
         
     products = query.order_by(Product.created_at.desc()).all()
     batches = Batch.query.all()
