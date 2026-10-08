@@ -145,8 +145,14 @@ def simulate_start():
         db.session.commit()
         
     last_product = Product.query.order_by(Product.id.desc()).first()
-    new_id_num = 1001 if not last_product else int(last_product.serial_number.split('-')[-1]) + 1
+    try:
+        new_id_num = int(last_product.serial_number.split('-')[-1]) + 1 if last_product else 1001
+    except ValueError:
+        new_id_num = 1001
     serial_number = f"EV-MOD-{new_id_num}"
+    while Product.query.filter_by(serial_number=serial_number).first():
+        new_id_num += 1
+        serial_number = f"EV-MOD-{new_id_num}"
     
     product = Product(serial_number=serial_number, batch_id=batch.id, status='REGISTERED', current_station='Registration', result='Pending')
     db.session.add(product)
@@ -165,10 +171,19 @@ def simulate_step(product_id):
     if product.status == 'COMPLETED':
         return jsonify({"message": "Product is already completed", "status": "COMPLETED"})
 
-    current_index = stations.index(product.current_station) if product.current_station in stations else -1
-    if product.status in ['REGISTERED', 'WAITING', 'IDLE', 'COMPLETED']:
+    if product.current_station not in stations:
+        return jsonify({"error": f"Unknown production station: {product.current_station}"}), 409
+
+    station = Station.query.filter_by(name=product.current_station).first()
+    if not station:
+        return jsonify({"error": f"Production station is not configured: {product.current_station}"}), 409
+
+    if product.status not in ['REGISTERED', 'WAITING', 'IDLE', 'RUNNING']:
+        return jsonify({"error": f"Product cannot advance from status: {product.status}"}), 409
+
+    current_index = stations.index(product.current_station)
+    if product.status in ['REGISTERED', 'WAITING', 'IDLE']:
         product.status = 'RUNNING'
-        station = Station.query.filter_by(name=product.current_station).first()
         event = ProductionEvent(
             product_id=product.id,
             station_id=station.id,
@@ -185,7 +200,6 @@ def simulate_step(product_id):
         })
 
     elif product.status == 'RUNNING':
-        station = Station.query.filter_by(name=product.current_station).first()
         event = ProductionEvent(
             product_id=product.id,
             station_id=station.id,
