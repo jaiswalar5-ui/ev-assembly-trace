@@ -511,6 +511,7 @@ def config():
 @app.route('/testing')
 @login_required
 @role_required('Admin', 'Quality Engineer')
+@role_required('Admin', 'Quality Engineer')
 def testing():
     product_id = request.args.get('product_id')
     selected_product = None
