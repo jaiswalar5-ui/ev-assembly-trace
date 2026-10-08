@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Assembly & Testing</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=2">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="d-flex" id="wrapper">
+        <!-- Sidebar -->
+        {% if current_user.is_authenticated %}
+        <div class="saas-sidebar border-end" id="sidebar-wrapper">
+            <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-primary">
+                <i class="bi bi-cpu-fill me-2"></i>SATTS
+            </div>
+            <div class="list-group list-group-flush my-3 px-2">
+                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-grid-1x2-fill me-3"></i>Dashboard</a>
+                <a href="{{ url_for('production_line') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-gear-wide-connected me-3"></i>Production</a>
+                <a href="{{ url_for('products') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-box-seam me-3"></i>Products</a>
+                <a href="{{ url_for('batches') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-boxes me-3"></i>Batches</a>
+                
+                {% if current_user.role in ['Admin', 'Quality Engineer'] %}
+                <a href="{{ url_for('testing') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-clipboard-check-fill me-3"></i>Testing</a>
+                {% endif %}
+                
+                {% if current_user.role in ['Admin', 'Quality Engineer', 'Production Engineer'] %}
+                <a href="{{ url_for('defects') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-exclamation-triangle-fill me-3"></i>Defects</a>
+                {% endif %}
+                
+                <a href="{{ url_for('reports') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-file-earmark-bar-graph-fill me-3"></i>Reports</a>
+                
+                {% if current_user.role == 'Admin' %}
+                <a href="{{ url_for('config') }}" class="list-group-item list-group-item-action saas-nav-link mt-4"><i class="bi bi-sliders me-3"></i>Configuration</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <!-- /#sidebar-wrapper -->
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper" class="w-100 bg-light">
+            <nav class="navbar navbar-expand-lg saas-navbar border-bottom px-4 py-3">
+                <div class="container-fluid p-0">
+                    {% if current_user.is_authenticated %}
+                    <span class="navbar-brand mb-0 h4 fw-semibold text-dark">Workspace</span>
+                    <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <i class="bi bi-list fs-2"></i>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto align-items-center">
+                            <li class="nav-item me-4">
+                                <div class="d-flex align-items-center text-secondary">
+                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; font-weight: 600;">
+                                        {{ current_user.username[0]|upper }}
+                                    </div>
+                                    <span class="fw-medium">{{ current_user.username }}</span>
+                                    <span class="badge bg-light text-secondary border ms-2">{{ current_user.role }}</span>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-medium" href="{{ url_for('auth.logout') }}">Sign Out</a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <span class="navbar-brand mb-0 h4 fw-bold text-primary"><i class="bi bi-cpu-fill me-2"></i>SATTS Platform</span>
+                    {% endif %}
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                      </div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+        <!-- /#page-content-wrapper -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
