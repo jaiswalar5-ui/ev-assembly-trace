@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, request, jsonify
+from flask import Flask, render_template, redirect, url_for, request, jsonify, flash
 from flask_login import LoginManager, login_required, current_user
 from models import db, User, Batch, Product, ProductionEvent, Station, TestResult, Defect, TestLimit
 from auth import auth, role_required
@@ -6,6 +6,7 @@ import time
 import random
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 app = Flask(__name__)
 import logging
@@ -306,13 +307,24 @@ def product_detail(id):
 @login_required
 def batches():
     if request.method == 'POST':
-        batch_number = request.form.get('batch_code')
-        product_type = request.form.get('product_type')
+        batch_number = (request.form.get('batch_code') or '').strip()
+        product_type = (request.form.get('product_type') or '').strip() or None
         status = request.form.get('status', 'Active')
-        if batch_number:
-            new_batch = Batch(batch_number=batch_number, product_type=product_type, status=status)
-            db.session.add(new_batch)
+        if not batch_number:
+            flash('Please provide a batch code.', 'warning')
+            return redirect(url_for('batches'))
+
+        if Batch.query.filter_by(batch_number=batch_number).first():
+            flash('A batch with that code already exists.', 'warning')
+            return redirect(url_for('batches'))
+
+        new_batch = Batch(batch_number=batch_number, product_type=product_type, status=status)
+        db.session.add(new_batch)
+        try:
             db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            flash('A batch with that code already exists.', 'warning')
         return redirect(url_for('batches'))
     
     batches = Batch.query.order_by(Batch.created_at.desc()).all()

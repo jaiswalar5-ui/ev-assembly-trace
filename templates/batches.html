@@ -29,6 +29,10 @@
                             <a href="{{ url_for('batch_dashboard', id=batch.id) }}" class="btn btn-sm btn-outline-info">Dashboard</a>
                         </td>
                     </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">No batches yet. Create a batch to get started.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
