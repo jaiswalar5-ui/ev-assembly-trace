@@ -203,22 +203,63 @@ def simulate_step(product_id):
                 else:
                     value = (limit.max_value or 100) + random.uniform(1, 10)
 
-                passed = not (
-                    limit.min_value is not None and value < limit.min_value
-                    or limit.max_value is not None and value > limit.max_value
-                )
+                passed = True
+                reason = None
+                if limit.min_value is not None and value < limit.min_value:
+                    passed = False
+                    reason = 'Under-voltage' if limit.parameter == 'Voltage' else 'Below minimum'
+                if limit.max_value is not None and value > limit.max_value:
+                    passed = False
+                    if limit.parameter == 'Voltage':
+                        reason = 'Over-voltage'
+                    elif limit.parameter == 'Temperature':
+                        reason = 'Overheating'
+                    elif limit.parameter == 'Cell Balance':
+                        reason = 'Cell imbalance'
+                    else:
+                        reason = 'Above maximum'
+                if limit.parameter == 'Insulation Resistance' and not passed:
+                    reason = 'Insulation failure'
+
                 db.session.add(TestResult(
                     product_id=product.id,
                     parameter=limit.parameter,
                     value=value,
                     passed=passed
                 ))
+                if not passed:
+                    db.session.add(Defect(
+                        product_id=product.id,
+                        batch_id=product.batch_id,
+                        station_id=station.id,
+                        parameter=limit.parameter,
+                        actual_value=str(round(value, 2)),
+                        expected_value=f"{limit.min_value} - {limit.max_value}",
+                        reason=reason,
+                        description=f"Test failed for {limit.parameter}",
+                        severity='High' if limit.parameter in ['Voltage', 'Insulation Resistance'] else 'Medium'
+                    ))
+
+        elif product.current_station == 'Assembly' and random.random() < 0.05:
+            db.session.add(Defect(
+                product_id=product.id,
+                batch_id=product.batch_id,
+                station_id=station.id,
+                parameter='Assembly',
+                actual_value='Mismatched Parts',
+                expected_value='Correct Parts',
+                reason='Assembly mismatch',
+                description='Incorrect components assembled.',
+                severity='Medium'
+            ))
 
         if current_index + 1 < len(stations):
             product.current_station = stations[current_index + 1]
             product.status = 'WAITING'
         else:
             product.status = 'COMPLETED'
+            defects = Defect.query.filter_by(product_id=product.id).all()
+            product.result = 'REJECTED' if defects else 'APPROVED'
 
         db.session.commit()
         return jsonify({
