@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('products') }}" class="btn btn-outline-secondary">&larr; Back to Products</a>
+    {% if product.status == 'COMPLETED' %}
+    <a href="{{ url_for('generate_report', product_id=product.id) }}" class="btn btn-primary float-end"><i class="bi bi-file-pdf"></i> Download PDF Report</a>
+    {% endif %}
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Digital Product Passport <span class="text-muted fs-4">#{{ product.serial_number }}</span></h2>
+    <div>
+        {% if product.result == 'APPROVED' %}
+            <span class="badge bg-success fs-5 px-3 py-2">PASSED</span>
+        {% elif product.result == 'REJECTED' %}
+            <span class="badge bg-danger fs-5 px-3 py-2">FAILED</span>
+        {% else %}
+            <span class="badge bg-warning text-dark fs-5 px-3 py-2">{{ product.result }}</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row mb-4">
+    <!-- Info -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-light fw-bold"><i class="bi bi-info-circle me-2"></i>Product Information</div>
+            <div class="card-body fs-5">
+                <div class="row mb-2">
+                    <div class="col-sm-5 text-muted">Serial Number</div>
+                    <div class="col-sm-7 fw-bold">{{ product.serial_number }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-5 text-muted">Batch Number</div>
+                    <div class="col-sm-7 fw-bold">{{ product.batch.batch_number if product.batch else 'N/A' }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-5 text-muted">Status</div>
+                    <div class="col-sm-7 fw-bold">{{ product.status }}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-sm-5 text-muted">Current Station</div>
+                    <div class="col-sm-7 fw-bold">{{ product.current_station }}</div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-5 text-muted">Registration Date</div>
+                    <div class="col-sm-7 fw-bold">{{ product.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Lifecycle Timeline -->
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-light fw-bold"><i class="bi bi-clock-history me-2"></i>Lifecycle Timeline</div>
+            <div class="card-body">
+                <div class="timeline position-relative" style="padding-left: 1.5rem; border-left: 2px solid #dee2e6;">
+                    {% for event in product.events|sort(attribute='timestamp') %}
+                    <div class="mb-3 position-relative">
+                        <i class="bi bi-circle-fill text-primary position-absolute" style="left: -1.85rem; top: 2px; font-size: 0.8rem; background: white;"></i>
+                        <div class="fw-bold">{{ event.station.name }} <span class="badge bg-secondary ms-2">{{ event.status }}</span></div>
+                        <div class="text-muted small">{{ event.timestamp.strftime('%Y-%m-%d %H:%M:%S') }} - by User {{ event.user_id }}</div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">No timeline events recorded.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

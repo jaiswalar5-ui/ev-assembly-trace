@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Configuration</h2>
+    <div class="card mt-3">
+        <div class="card-header">
+            Test Limits
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('config') }}">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Minimum Value</th>
+                            <th>Maximum Value</th>
+                            <th>Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for limit in limits %}
+                        <tr>
+                            <td>{{ limit.parameter }}</td>
+                            <td>
+                                <input type="number" step="any" name="min_{{ limit.parameter }}" class="form-control" value="{{ limit.min_value if limit.min_value is not none else '' }}">
+                            </td>
+                            <td>
+                                <input type="number" step="any" name="max_{{ limit.parameter }}" class="form-control" value="{{ limit.max_value if limit.max_value is not none else '' }}">
+                            </td>
+                            <td>
+                                <input type="text" name="unit_{{ limit.parameter }}" class="form-control" value="{{ limit.unit or '' }}">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

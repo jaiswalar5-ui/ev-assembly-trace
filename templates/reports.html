@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Reports & Simulation</h2>
+
+    <div class="row">
+        <!-- Reports Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-file-earmark-pdf me-2"></i>Generate PDF Report</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Select a completed product to generate a Digital Product Passport PDF report.</p>
+                    <form method="GET" id="reportForm" onsubmit="return validateReportForm()">
+                        <div class="mb-3">
+                            <label for="productSelect" class="form-label">Completed Products</label>
+                            <select id="productSelect" class="form-select" required>
+                                <option value="" disabled selected>Select a Product...</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}">{{ p.serial_number }} (Batch: {{ p.batch.batch_number if p.batch else 'N/A' }})</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a product.</div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">Generate Report</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Simulation Section -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-play-circle me-2"></i>Demo Simulation Mode</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Automatically generate and process a batch of products to simulate manufacturing activity (mostly PASS, some FAIL).</p>
+                    <form method="POST" action="{{ url_for('simulate') }}" id="simulateForm" onsubmit="return validateSimulateForm()">
+                        <div class="mb-3">
+                            <label for="batchSelect" class="form-label">Target Batch</label>
+                            <select name="batch_id" id="batchSelect" class="form-select" required>
+                                <option value="" disabled selected>Select a Batch...</option>
+                                {% for b in batches %}
+                                <option value="{{ b.id }}">{{ b.batch_number }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">Please select a batch.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="numProducts" class="form-label">Number of Products (10 - 20)</label>
+                            <input type="number" name="num_products" id="numProducts" class="form-control" min="10" max="20" value="10" required>
+                            <div class="invalid-feedback">Please enter a number between 10 and 20.</div>
+                        </div>
+                        <button type="submit" class="btn btn-success" id="btnSimulate">
+                            <span id="simSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            Start Simulation
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function validateReportForm() {
+    const sel = document.getElementById('productSelect');
+    if (!sel.value) {
+        sel.classList.add('is-invalid');
+        return false;
+    }
+    sel.classList.remove('is-invalid');
+    // Set the action based on selected ID
+    document.getElementById('reportForm').action = "/generate_report/" + sel.value;
+    return true;
+}
+
+function validateSimulateForm() {
+    let valid = true;
+    const batchSel = document.getElementById('batchSelect');
+    if (!batchSel.value) {
+        batchSel.classList.add('is-invalid');
+        valid = false;
+    } else {
+        batchSel.classList.remove('is-invalid');
+    }
+
+    const numProd = document.getElementById('numProducts');
+    if (numProd.value < 10 || numProd.value > 20) {
+        numProd.classList.add('is-invalid');
+        valid = false;
+    } else {
+        numProd.classList.remove('is-invalid');
+    }
+
+    if (valid) {
+        document.getElementById('btnSimulate').disabled = true;
+        document.getElementById('simSpinner').classList.remove('d-none');
+    }
+    return valid;
+}
+</script>
+{% endblock %}

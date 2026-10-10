@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Batch: {{ batch.batch_number }} Dashboard</h2>
+    <a href="{{ url_for('batches') }}" class="btn btn-outline-secondary">Back to Batches</a>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase mb-2">Total Products</h6>
+                <h2 class="mb-0">{{ total_products }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase mb-2">Pass Rate</h6>
+                <h2 class="mb-0 text-success">{{ pass_rate }}%</h2>
+                <small class="text-muted">{{ passed }} Passed / {{ failed }} Failed</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase mb-2">Total Defects</h6>
+                <h2 class="mb-0 text-danger">{{ total_defects }}</h2>
+                <small class="text-muted">Most common: {{ common_defect_name }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted text-uppercase mb-2">Avg Test Time</h6>
+                <h2 class="mb-0 text-info">{{ avg_test_time }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

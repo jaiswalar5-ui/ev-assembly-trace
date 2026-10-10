@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2 class="mb-4">Products</h2>
+
+<div class="card mb-4 shadow-sm border-0">
+    <div class="card-body">
+        <form method="GET" action="{{ url_for('products') }}" class="row g-3">
+            <div class="col-md-2">
+                <input type="text" name="search" class="form-control" placeholder="Search ID..." value="{{ request.args.get('search', '') }}">
+            </div>
+            <div class="col-md-2">
+                <select name="batch_id" class="form-select">
+                    <option value="">All Batches</option>
+                    {% for b in batches %}
+                        <option value="{{ b.id }}" {% if request.args.get('batch_id')|string == b.id|string %}selected{% endif %}>{{ b.batch_number }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="REGISTERED" {% if request.args.get('status') == 'REGISTERED' %}selected{% endif %}>Registered</option>
+                    <option value="RUNNING" {% if request.args.get('status') == 'RUNNING' %}selected{% endif %}>Running</option>
+                    <option value="WAITING" {% if request.args.get('status') == 'WAITING' %}selected{% endif %}>Waiting</option>
+                    <option value="COMPLETED" {% if request.args.get('status') == 'COMPLETED' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="result" class="form-select">
+                    <option value="">All Results</option>
+                    <option value="Pending" {% if request.args.get('result') == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="APPROVED" {% if request.args.get('result') == 'APPROVED' %}selected{% endif %}>Approved</option>
+                    <option value="REJECTED" {% if request.args.get('result') == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="station" class="form-select">
+                    <option value="">All Stations</option>
+                    {% for s in stations %}
+                        <option value="{{ s.name }}" {% if request.args.get('station') == s.name %}selected{% endif %}>{{ s.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Serial Number</th>
+                        <th>Batch</th>
+                        <th>Status</th>
+                        <th>Station</th>
+                        <th>Result</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in products %}
+                    <tr>
+                        <td><strong>{{ p.serial_number }}</strong></td>
+                        <td>{{ p.batch.batch_number if p.batch else 'N/A' }}</td>
+                        <td>
+                            <span class="badge bg-{% if p.status == 'COMPLETED' %}success{% elif p.status == 'RUNNING' %}primary{% else %}secondary{% endif %}">
+                                {{ p.status }}
+                            </span>
+                        </td>
+                        <td>{{ p.current_station }}</td>
+                        <td>
+                            <span class="badge bg-{% if p.result == 'APPROVED' %}success{% elif p.result == 'REJECTED' %}danger{% else %}warning text-dark{% endif %}">
+                                {{ p.result }}
+                            </span>
+                        </td>
+                        <td>{{ p.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>
+                            <a href="{{ url_for('product_detail', id=p.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-4">No products found matching criteria.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

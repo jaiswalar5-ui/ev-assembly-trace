@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Industrial Monitoring System</h2>
+    <div class="text-muted"><i class="bi bi-clock"></i> Live Updates Active</div>
+</div>
+
+<!-- KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-primary border-4 h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase fw-bold mb-1">Total Products</div>
+                <h3 class="mb-0">{{ total_products }}</h3>
+                <div class="small mt-2"><span class="badge bg-secondary">{{ in_progress }} In Progress</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-success border-4 h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase fw-bold mb-1">Pass Rate</div>
+                <h3 class="mb-0 text-success">{{ pass_rate }}%</h3>
+                <div class="small mt-2">{{ passed }} Passed</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-danger border-4 h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase fw-bold mb-1">Failure Rate</div>
+                <h3 class="mb-0 text-danger">{{ fail_rate }}%</h3>
+                <div class="small mt-2">{{ rejected }} Rejected</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm border-start border-info border-4 h-100">
+            <div class="card-body">
+                <div class="text-muted small text-uppercase fw-bold mb-1">Avg Cycle Time</div>
+                <h3 class="mb-0 text-info">{{ avg_cycle_time }}</h3>
+                <div class="small mt-2">Throughput: {{ throughput }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- OEE and Stations -->
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white pb-0">
+                <h5 class="card-title">OEE Metrics</h5>
+            </div>
+            <div class="card-body">
+                <div class="row text-center mb-3">
+                    <div class="col">
+                        <div class="display-6 fw-bold text-primary">{{ overall_oee }}%</div>
+                        <div class="small text-muted">Overall OEE</div>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col">
+                        <h4 class="mb-0 text-success">{{ availability }}%</h4>
+                        <small class="text-muted">Availability</small>
+                    </div>
+                    <div class="col border-start border-end">
+                        <h4 class="mb-0 text-warning">{{ performance }}%</h4>
+                        <small class="text-muted">Performance</small>
+                    </div>
+                    <div class="col">
+                        <h4 class="mb-0 text-info">{{ quality }}%</h4>
+                        <small class="text-muted">Quality</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white pb-0">
+                <h5 class="card-title">Station Overview</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-3">
+                    <div><strong>Active:</strong> <span class="badge bg-success">{{ active_stations }}</span></div>
+                    <div><strong>Idle:</strong> <span class="badge bg-secondary">{{ idle_stations }}</span></div>
+                    <div><strong>Sim Downtime:</strong> <span class="badge bg-warning text-dark">0 mins</span></div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Station</th>
+                                <th>Status</th>
+                                <th>In Station</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in station_stats %}
+                            <tr>
+                                <td>{{ s.name }}</td>
+                                <td>
+                                    {% if s.active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Idle</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ s.in_station }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quality KPIs -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card bg-white border-0">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Defects</h6>
+                <h3>{{ total_defects }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card bg-white border-0">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Most Common Defect</h6>
+                <h3 class="text-warning">{{ common_defect_name }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Average Cycle Time (mins)</h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="cycleChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Production by Day</h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="prodChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Pass vs Fail</h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="passFailChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Defects by Station</h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="defectsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">OEE Trend</h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="oeeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Defect Categories</h5>
+                <div style="position: relative; height: 250px; width: 100%;">
+                    <canvas id="categoriesChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Safe JSON parsing for chart data
+    const prodLabels = {{ prod_labels | tojson }};
+    const prodData = {{ prod_data | tojson }};
+    const passFailData = {{ pass_fail_data | tojson }};
+    const defectsLabels = {{ defects_by_station_labels | tojson }};
+    const defectsData = {{ defects_by_station_data | tojson }};
+    const oeeData = {{ oee_trend_data | tojson }};
+    const catLabels = {{ cat_labels | tojson }};
+    const catData = {{ cat_data | tojson }};
+
+    const getChartOptions = () => ({ responsive: true, maintainAspectRatio: false });
+
+    new Chart(document.getElementById('cycleChart'), {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Today'],
+            datasets: [{ label: 'Mins', data: [4.5, 4.3, 4.2, 4.4, 4.1, 4.2], borderColor: '#17a2b8', tension: 0.1, fill: false }]
+        },
+        options: getChartOptions()
+    });
+
+    new Chart(document.getElementById('prodChart'), {
+        type: 'bar',
+        data: {
+            labels: prodLabels,
+            datasets: [{ label: 'Units', data: prodData, backgroundColor: '#0d6efd' }]
+        },
+        options: getChartOptions()
+    });
+
+    new Chart(document.getElementById('passFailChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Pass', 'Fail'],
+            datasets: [{ data: passFailData, backgroundColor: ['#198754', '#dc3545'] }]
+        },
+        options: getChartOptions()
+    });
+
+    new Chart(document.getElementById('defectsChart'), {
+        type: 'bar',
+        data: {
+            labels: defectsLabels,
+            datasets: [{ label: 'Defects', data: defectsData, backgroundColor: '#ffc107' }]
+        },
+        options: { ...getChartOptions(), indexAxis: 'y' }
+    });
+
+    new Chart(document.getElementById('oeeChart'), {
+        type: 'line',
+        data: {
+            labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Today'],
+            datasets: [{ label: 'OEE %', data: oeeData, borderColor: '#6f42c1', tension: 0.3, fill: true, backgroundColor: 'rgba(111, 66, 193, 0.1)' }]
+        },
+        options: getChartOptions()
+    });
+
+    new Chart(document.getElementById('categoriesChart'), {
+        type: 'pie',
+        data: {
+            labels: catLabels,
+            datasets: [{ data: catData, backgroundColor: ['#fd7e14', '#20c997', '#e83e8c', '#6f42c1'] }]
+        },
+        options: getChartOptions()
+    });
+</script>
+{% endblock %}
