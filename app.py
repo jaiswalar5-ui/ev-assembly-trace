@@ -508,5 +508,40 @@ def config():
         
     return render_template('config.html', limits=limits, title='Configuration')
 
+@app.route('/testing')
+@login_required
+@role_required('Admin', 'Quality Engineer')
+def testing():
+    product_id = request.args.get('product_id')
+    selected_product = None
+    tests = []
+    if product_id:
+        selected_product = Product.query.get(product_id)
+        tests = TestResult.query.filter_by(product_id=product_id).all()
+        defects = {d.parameter: d for d in Defect.query.filter_by(product_id=product_id).all()}
+        limits = {limit.parameter: limit for limit in TestLimit.query.all()}
+        for test in tests:
+            test.limit_str = (
+                f"{limits[test.parameter].min_value} - {limits[test.parameter].max_value}"
+                if test.parameter in limits else ""
+            )
+            test.reason = defects[test.parameter].reason if test.parameter in defects else "-"
+
+    products = Product.query.order_by(Product.created_at.desc()).all()
+    return render_template(
+        'testing.html',
+        products=products,
+        selected_product=selected_product,
+        tests=tests,
+        title='Testing'
+    )
+
+@app.route('/defects')
+@login_required
+@role_required('Admin', 'Quality Engineer', 'Production Engineer')
+def defects():
+    defects_list = Defect.query.order_by(Defect.timestamp.desc()).all()
+    return render_template('defects.html', defects=defects_list, title='Defects')
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

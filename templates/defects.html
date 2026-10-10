@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Defects Log</h2>
+    <div class="card mt-3">
+        <div class="card-body">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Product</th>
+                        <th>Parameter</th>
+                        <th>Severity</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for defect in defects %}
+                    <tr>
+                        <td>{{ defect.id }}</td>
+                        <td>
+                            {% if defect.product %}
+                            <a href="{{ url_for('product_detail', id=defect.product_id) }}">{{ defect.product.serial_number }}</a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ defect.parameter or defect.description }}</td>
+                        <td>
+                            <span class="badge {% if defect.severity == 'High' %}bg-danger{% elif defect.severity == 'Medium' %}bg-warning text-dark{% else %}bg-info text-dark{% endif %}">
+                                {{ defect.severity }}
+                            </span>
+                        </td>
+                        <td>{{ defect.reason or '-' }}</td>
+                        <td>{{ defect.status }}</td>
+                        <td>{{ defect.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center">No defects recorded.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

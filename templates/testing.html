@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Testing & Diagnostics</h2>
+    
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">Select Product</div>
+                <div class="card-body">
+                    <form method="GET" action="{{ url_for('testing') }}">
+                        <div class="mb-3">
+                            <select name="product_id" class="form-select" onchange="this.form.submit()">
+                                <option value="">-- Select Product --</option>
+                                {% for p in products %}
+                                <option value="{{ p.id }}" {% if selected_product and selected_product.id == p.id %}selected{% endif %}>
+                                    {{ p.serial_number }} ({{ p.status }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            {% if selected_product %}
+            <div class="card">
+                <div class="card-header">
+                    Test Results: {{ selected_product.serial_number }}
+                    {% if selected_product.result == 'REJECTED' %}
+                        <span class="badge bg-danger float-end">REJECTED</span>
+                    {% elif selected_product.result == 'APPROVED' %}
+                        <span class="badge bg-success float-end">APPROVED</span>
+                    {% else %}
+                        <span class="badge bg-secondary float-end">{{ selected_product.result }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if tests %}
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Actual Value</th>
+                                <th>Allowed Limit</th>
+                                <th>Result</th>
+                                <th>Diagnostic Reason</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for t in tests %}
+                            <tr class="{% if not t.passed %}table-danger{% endif %}">
+                                <td>{{ t.parameter }}</td>
+                                <td>{{ t.value | round(2) }}</td>
+                                <td>{{ t.limit_str }}</td>
+                                <td>
+                                    {% if t.passed %}
+                                    <span class="text-success fw-bold">PASS</span>
+                                    {% else %}
+                                    <span class="text-danger fw-bold">FAIL</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ t.reason }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p>No test results available for this product.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
