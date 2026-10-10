@@ -21,6 +21,18 @@
     </div>
 </div>
 
+{% if product.result == 'REJECTED' and product.defects %}
+<div class="alert alert-danger shadow-sm mb-4">
+    <h4 class="alert-heading"><i class="bi bi-exclamation-triangle-fill me-2"></i>Failure Diagnosis</h4>
+    <hr>
+    <ul class="mb-0 fs-5">
+        {% for defect in product.defects %}
+        <li><strong>{{ defect.parameter }}</strong> failure at <strong>{{ defect.station.name if defect.station else 'Unknown' }}</strong>: {{ defect.reason }}. (Actual: {{ defect.actual_value }}, Expected: {{ defect.expected_value }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
 <div class="row mb-4">
     <!-- Info -->
     <div class="col-md-6">
@@ -72,4 +84,45 @@
     </div>
 </div>
 
+<div class="row">
+    <div class="col-md-12">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light fw-bold"><i class="bi bi-ui-checks me-2"></i>Test History</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Actual Value</th>
+                                <th>Result</th>
+                                <th>Tested At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for test in product.test_results %}
+                            <tr>
+                                <td>{{ test.parameter }}</td>
+                                <td><strong>{{ "%.2f"|format(test.value) }}</strong></td>
+                                <td>
+                                    {% if test.passed %}
+                                    <span class="badge bg-success">PASS</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">FAIL</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-muted">{{ test.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No tests recorded.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
