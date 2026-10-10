@@ -153,6 +153,81 @@ def simulate_start():
     
     return jsonify({"product_id": product.id, "serial_number": product.serial_number})
 
+@app.route('/api/simulate/step/<int:product_id>', methods=['POST'])
+@login_required
+def simulate_step(product_id):
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    stations = ['Registration', 'Assembly', 'Inspection', 'Functional Test', 'Final QA']
+    if product.status == 'COMPLETED':
+        return jsonify({"message": "Product is already completed", "status": "COMPLETED"})
+
+    current_index = stations.index(product.current_station) if product.current_station in stations else -1
+    if product.status in ['REGISTERED', 'WAITING', 'IDLE', 'COMPLETED']:
+        product.status = 'RUNNING'
+        station = Station.query.filter_by(name=product.current_station).first()
+        event = ProductionEvent(
+            product_id=product.id,
+            station_id=station.id,
+            user_id=current_user.id,
+            status='STARTED'
+        )
+        db.session.add(event)
+        db.session.commit()
+        return jsonify({
+            "message": f"Started at {product.current_station}",
+            "status": product.status,
+            "station": product.current_station,
+            "wait_time": random.randint(2, 5)
+        })
+
+    elif product.status == 'RUNNING':
+        station = Station.query.filter_by(name=product.current_station).first()
+        event = ProductionEvent(
+            product_id=product.id,
+            station_id=station.id,
+            user_id=current_user.id,
+            status='COMPLETED'
+        )
+        db.session.add(event)
+
+        if product.current_station == 'Functional Test':
+            limits = TestLimit.query.all()
+            for limit in limits:
+                if random.random() < 0.9:
+                    value = random.uniform(limit.min_value or 0, limit.max_value or 100)
+                elif random.random() < 0.5 and limit.min_value is not None:
+                    value = limit.min_value - random.uniform(1, 10)
+                else:
+                    value = (limit.max_value or 100) + random.uniform(1, 10)
+
+                passed = not (
+                    limit.min_value is not None and value < limit.min_value
+                    or limit.max_value is not None and value > limit.max_value
+                )
+                db.session.add(TestResult(
+                    product_id=product.id,
+                    parameter=limit.parameter,
+                    value=value,
+                    passed=passed
+                ))
+
+        if current_index + 1 < len(stations):
+            product.current_station = stations[current_index + 1]
+            product.status = 'WAITING'
+        else:
+            product.status = 'COMPLETED'
+
+        db.session.commit()
+        return jsonify({
+            "message": f"Moved to {product.current_station}",
+            "status": product.status,
+            "station": product.current_station,
+            "wait_time": 0
+        })
+
 @app.route('/products')
 @login_required
 def products():
