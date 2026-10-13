@@ -216,7 +216,16 @@
     const catLabels = {{ cat_labels | tojson }};
     const catData = {{ cat_data | tojson }};
 
-    const getChartOptions = () => ({ responsive: true, maintainAspectRatio: false });
+    const getChartOptions = (chartType) => {
+        const options = { responsive: true, maintainAspectRatio: false };
+        if (chartType === 'bar' || chartType === 'line') {
+            options.scales = {
+                x: { grid: { display: false } },
+                y: { beginAtZero: true }
+            };
+        }
+        return options;
+    };
 
     new Chart(document.getElementById('cycleChart'), {
         type: 'line',
@@ -224,7 +233,7 @@
             labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Today'],
             datasets: [{ label: 'Mins', data: [4.5, 4.3, 4.2, 4.4, 4.1, 4.2], borderColor: '#17a2b8', tension: 0.1, fill: false }]
         },
-        options: getChartOptions()
+        options: getChartOptions('line')
     });
 
     new Chart(document.getElementById('prodChart'), {
@@ -233,7 +242,7 @@
             labels: prodLabels,
             datasets: [{ label: 'Units', data: prodData, backgroundColor: '#0d6efd' }]
         },
-        options: getChartOptions()
+        options: getChartOptions('bar')
     });
 
     new Chart(document.getElementById('passFailChart'), {
@@ -242,7 +251,7 @@
             labels: ['Pass', 'Fail'],
             datasets: [{ data: passFailData, backgroundColor: ['#198754', '#dc3545'] }]
         },
-        options: getChartOptions()
+        options: getChartOptions('doughnut')
     });
 
     new Chart(document.getElementById('defectsChart'), {
@@ -251,7 +260,7 @@
             labels: defectsLabels,
             datasets: [{ label: 'Defects', data: defectsData, backgroundColor: '#ffc107' }]
         },
-        options: { ...getChartOptions(), indexAxis: 'y' }
+        options: { ...getChartOptions('bar'), indexAxis: 'y' }
     });
 
     new Chart(document.getElementById('oeeChart'), {
@@ -260,7 +269,7 @@
             labels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Today'],
             datasets: [{ label: 'OEE %', data: oeeData, borderColor: '#6f42c1', tension: 0.3, fill: true, backgroundColor: 'rgba(111, 66, 193, 0.1)' }]
         },
-        options: getChartOptions()
+        options: getChartOptions('line')
     });
 
     new Chart(document.getElementById('categoriesChart'), {
@@ -269,7 +278,7 @@
             labels: catLabels,
             datasets: [{ data: catData, backgroundColor: ['#fd7e14', '#20c997', '#e83e8c', '#6f42c1'] }]
         },
-        options: getChartOptions()
+        options: getChartOptions('pie')
     });
 </script>
 {% endblock %}
