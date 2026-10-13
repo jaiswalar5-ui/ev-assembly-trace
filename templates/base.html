@@ -18,31 +18,31 @@
     <div class="d-flex" id="wrapper">
         <!-- Sidebar -->
         {% if current_user.is_authenticated %}
-        <div class="saas-sidebar border-end" id="sidebar-wrapper">
+        <aside class="saas-sidebar border-end" id="sidebar-wrapper" aria-label="Primary sidebar">
             <div class="sidebar-heading text-center py-4 fs-4 fw-bold text-primary">
                 <i class="bi bi-cpu-fill me-2"></i>SATTS
             </div>
-            <div class="list-group list-group-flush my-3 px-2">
-                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-grid-1x2-fill me-3"></i>Dashboard</a>
-                <a href="{{ url_for('production_line') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-gear-wide-connected me-3"></i>Production</a>
-                <a href="{{ url_for('products') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-box-seam me-3"></i>Products</a>
-                <a href="{{ url_for('batches') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-boxes me-3"></i>Batches</a>
+            <nav class="list-group list-group-flush my-3 px-2" aria-label="Main navigation">
+                <a href="{{ url_for('dashboard') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint == 'dashboard' else '' }}"><i class="bi bi-grid-1x2-fill me-3"></i>Dashboard</a>
+                <a href="{{ url_for('production_line') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint == 'production_line' else '' }}"><i class="bi bi-gear-wide-connected me-3"></i>Production</a>
+                <a href="{{ url_for('products') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint in ['products', 'product_detail'] else '' }}"><i class="bi bi-box-seam me-3"></i>Products</a>
+                <a href="{{ url_for('batches') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint in ['batches', 'batch_dashboard'] else '' }}"><i class="bi bi-boxes me-3"></i>Batches</a>
                 
                 {% if current_user.role in ['Admin', 'Quality Engineer'] %}
-                <a href="{{ url_for('testing') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-clipboard-check-fill me-3"></i>Testing</a>
+                <a href="{{ url_for('testing') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint == 'testing' else '' }}"><i class="bi bi-clipboard-check-fill me-3"></i>Testing</a>
                 {% endif %}
                 
                 {% if current_user.role in ['Admin', 'Quality Engineer', 'Production Engineer'] %}
-                <a href="{{ url_for('defects') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-exclamation-triangle-fill me-3"></i>Defects</a>
+                <a href="{{ url_for('defects') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint == 'defects' else '' }}"><i class="bi bi-exclamation-triangle-fill me-3"></i>Defects</a>
                 {% endif %}
                 
-                <a href="{{ url_for('reports') }}" class="list-group-item list-group-item-action saas-nav-link"><i class="bi bi-file-earmark-bar-graph-fill me-3"></i>Reports</a>
+                <a href="{{ url_for('reports') }}" class="list-group-item list-group-item-action saas-nav-link {{ 'active' if request.endpoint in ['reports', 'generate_report', 'simulate'] else '' }}"><i class="bi bi-file-earmark-bar-graph-fill me-3"></i>Reports</a>
                 
                 {% if current_user.role == 'Admin' %}
-                <a href="{{ url_for('config') }}" class="list-group-item list-group-item-action saas-nav-link mt-4"><i class="bi bi-sliders me-3"></i>Configuration</a>
+                <a href="{{ url_for('config') }}" class="list-group-item list-group-item-action saas-nav-link mt-4 {{ 'active' if request.endpoint == 'config' else '' }}"><i class="bi bi-sliders me-3"></i>Configuration</a>
                 {% endif %}
-            </div>
-        </div>
+            </nav>
+        </aside>
         {% endif %}
         <!-- /#sidebar-wrapper -->
 
